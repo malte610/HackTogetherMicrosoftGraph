@@ -1,0 +1,50 @@
+﻿@page "/calendar"
+
+@using Microsoft.Identity.Web
+@using Microsoft.Graph
+@inject Microsoft.Graph.GraphServiceClient GraphServiceClient
+@inject MicrosoftIdentityConsentAndConditionalAccessHandler ConsentHandler
+
+<h3>TestCalendar</h3>
+
+@if (CalendarEvents.Count == 0)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+    @foreach (Event e in CalendarEvents)
+    {
+        <li>@e.Subject</li>
+    }
+    </ul>
+}
+
+@code {
+    List<Event> CalendarEvents = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var result = await GraphServiceClient.Me.Events.Request().GetAsync();
+
+            foreach (var r in result)
+            {
+                CalendarEvents.Add(r);
+            }
+
+            //Console.WriteLine(  "hi");
+            //.GetAsync((requestConfiguration) =>
+            //{
+            //requestConfiguration.QueryParameters.Select = new string[] { "subject", "body", "bodyPreview", "organizer", "attendees", "start", "end", "location" };
+            //});
+        }
+        catch (Exception ex)
+        {
+            ConsentHandler.HandleException(ex);
+        }
+    }
+
+}

@@ -1,0 +1,37 @@
+﻿@page "/excel"
+
+
+@using Microsoft.Graph
+@using System.Text.Json;
+@inject Microsoft.Graph.GraphServiceClient GraphServiceClient
+
+
+<h3>Post To Excel</h3>
+
+<button @onclick=Post>Press me to add a Row</button>
+
+@code {
+
+    private async Task Post()
+    {
+        //https://graph.microsoft.com/v1.0/me/drive/items/01CHTZMNTMQZOTYQ7PDNGZZ6FYUQR2VW7V/workbook/worksheets/Sheet1/tables/Table1/rows
+
+        List<List<string>> rowValues = new() {
+            new() {
+                    "07.03.2022", "Hi From Blazor"
+            }
+        };
+
+        WorkbookTableRow newRow = new()
+        {
+            Values = JsonSerializer.SerializeToDocument(rowValues)
+        };
+
+        await GraphServiceClient.Me.Drive.Items["01CHTZMNTMQZOTYQ7PDNGZZ6FYUQR2VW7V"]
+            .Workbook.Worksheets["Sheet1"]
+            .Tables["Table1"].Rows
+            .Request().AddAsync(newRow);
+
+
+    }
+}
