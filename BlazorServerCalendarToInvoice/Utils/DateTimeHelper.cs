@@ -10,5 +10,9 @@
         {
             return new DateTime(dateTime.Year, dateTime.Month, DateTime.DaysInMonth(dateTime.Year, dateTime.Month), 23, 59, 59);
         }
+        public static string StrToReadableStr(string value)
+        {
+            return DateTime.Parse(value).ToString("G");
+        }
     }
 }
