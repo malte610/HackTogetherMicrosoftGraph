@@ -135,6 +135,7 @@
                 Surname = "Skywalker",
                 CompanyName = "Jedi Order",
                 JobTitle = "Jedi Master",
+                BusinessAddress = new PhysicalAddress() {CountryOrRegion = "Yavin 4"},
                 EmailAddresses = new List<EmailAddress>() {
                     new EmailAddress() { Name = "Luke Skywalker", Address = "luke@newrepublic.jedi" }
                 },
@@ -146,6 +147,7 @@
                 Surname = "Moff",
                 CompanyName = "Galactic Empire",
                 JobTitle = "Moff",
+                BusinessAddress = new PhysicalAddress() {CountryOrRegion = "Coruscant"},
                 EmailAddresses = new List<EmailAddress>() {
                     new EmailAddress(){ Name = "Moff Gideon", Address = "moffgideon@galacticempire.sith" },
                     new EmailAddress(){ Name = "ISB Moff Gideon", Address = "g@isb.sith" },
@@ -159,8 +161,19 @@
                 Surname = "Djarin",
                 CompanyName = "The Watch",
                 JobTitle = "Bounty Hunter",
+                BusinessAddress = new PhysicalAddress() {CountryOrRegion = "Mandalore"},
                 EmailAddresses = new List<EmailAddress>() { new EmailAddress() { Name = "Mando", Address = "din@thewatch.man" } },
                 Categories = new List<string> {customerCategory.DisplayName}
+            },
+                            new Contact
+            {
+                GivenName = "Han",
+                Surname = "Solo",
+                CompanyName = "New Republic",
+                JobTitle = "General",
+                BusinessAddress = new PhysicalAddress() {CountryOrRegion = "Chandrilla"},
+                EmailAddresses = new List<EmailAddress>() { new EmailAddress() { Name = "Han Solo", Address = "han@solo.wild" } },
+                Categories = new List<string> {"Buddy"}
             }
         };
 
