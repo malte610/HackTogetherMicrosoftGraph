@@ -1,4 +1,29 @@
 ﻿@page "/"
 
+@inject IDialogService DialogService
+@inject GraphServiceClient GraphServiceClient;
+
 <PageTitle>Index</PageTitle>
 
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            var mainFolder = await GraphServiceClient.Me.Drive.Root.Children["CalendarToInvoice"].Request().GetAsync();
+        }
+        catch (ServiceException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                OpenWizardDialog();
+            }
+        }
+    }
+
+    private void OpenWizardDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = false, DisableBackdropClick = true, FullWidth = true, NoHeader = true };
+        DialogService.Show<Wizard>("First Steps Wizard", options);
+    }
+}

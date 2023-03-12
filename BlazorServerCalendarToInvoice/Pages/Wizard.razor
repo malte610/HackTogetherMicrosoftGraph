@@ -1,0 +1,332 @@
+﻿@inject GraphServiceClient GraphServiceClient
+
+<MudDialog Style="background-color:white">
+    <DialogContent>
+        <MudCarousel Class="mud-width-full" Style="height: 40vh;" TData="object" ShowArrows="true" ShowBullets="true" AutoCycle="false">
+            <MudCarouselItem Transition="transition">
+                <div class="d-flex" style="height:100%">
+                    <p class="mx-auto my-auto">This seems to be your first startup!<br />Let's set some files up for you in your OneDrive!</p>
+                </div>
+            </MudCarouselItem>
+            <MudCarouselItem Transition="transition">
+                <div class="d-flex" style="height:100%">
+                    <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="CreateFoldersAndFiles" Disabled="stepCompleted[0]">
+                        @if (processingFolders)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
+                        }
+                        else
+                        {
+                            @if (!stepCompleted[0])
+                            {
+                                <MudText>Create Folders & Files</MudText>
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
+
+                                <MudText>Folders & Files created!</MudText>
+                            }
+                        }
+                    </MudButton>
+
+                </div>
+            </MudCarouselItem>
+            <MudCarouselItem Transition="transition">
+                <div class="d-flex" style="height:100%">
+                    <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="CreateSampleData" Disabled="stepCompleted[2]">
+                        @if (processingSampleData)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
+                        }
+                        else
+                        {
+                            @if (!stepCompleted[2])
+                            {
+                                <MudText>Create Sample Data</MudText>
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
+
+                                <MudText>Sample Data created!</MudText>
+                            }
+                        }
+                    </MudButton>
+
+                </div>
+            </MudCarouselItem>
+            <MudCarouselItem Transition="transition">
+                <div class="d-flex" style="height:100%">
+                    <MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.MudBlazor" Color="@Color.Primary" Size="@Size.Large" />
+                    @if (stepCompleted.All(steps => steps == true))
+                    {
+                        <MudButton Color="Color.Primary" OnClick="Submit">You did it! Click to close the Wizard and start creating invoices!</MudButton>
+                    } else
+                    {
+                        <MudText>You haven't completed all steps yet. Please check the other steps. 👈</MudText>
+                    }
+                </div>
+            </MudCarouselItem>
+        </MudCarousel>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+
+    private Transition transition = Transition.Slide;
+
+    private bool[] stepCompleted = { false, false, false };
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+
+    private bool processingFolders = false;
+    private bool processingSampleData = false;
+
+    /// <summary>
+    /// Creates Folders and Files in OneDrive
+    /// </summary>
+    /// <returns>Nothing.</returns>
+    private async Task CreateFoldersAndFiles()
+    {
+        processingFolders = true;
+        string appName = "CalendarToInvoice";
+        DriveItem appDriveItem = new() { Name = appName, Folder = new() };
+        DriveItem dataDriveItem = new() { Name = "Data", Folder = new() };
+        DriveItem invoiceDriveItem = new() { Name = "Invoices", Folder = new() };
+
+        var appFolder = await GraphServiceClient.Me.Drive.Root.Children.Request().AddAsync(appDriveItem);
+        var dataFolder = await GraphServiceClient.Me.Drive.Items[appFolder.Id].Children.Request().AddAsync(dataDriveItem);
+        var invoiceFolder = await GraphServiceClient.Me.Drive.Items[appFolder.Id].Children.Request().AddAsync(invoiceDriveItem);
+
+        stepCompleted[0] = true;
+        await CreateFiles(dataFolder);
+
+        await Task.Delay(100);
+        processingFolders = false;
+    }
+
+    /// <summary>
+    /// Creates Files in a Folder.
+    /// </summary>
+    /// <param name="folder">The folder you want to have the files created in</param>
+    /// <returns>Nothing.</returns>
+    private async Task CreateFiles(DriveItem folder)
+    {
+        DriveItem ledger = new() { Name = "Ledger.xlsx", File = new() };
+
+        await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(ledger);
+
+        stepCompleted[1] = true;
+    }
+
+    private static OutlookCategory customerCategory = new OutlookCategory { DisplayName = "Customer", Color = CategoryColor.Preset4 };
+    private static OutlookCategory billableCategory = new OutlookCategory { DisplayName = "Billable", Color = CategoryColor.Preset10 };
+    private static OutlookCategory postedCategory = new OutlookCategory { DisplayName = "Posted", Color = CategoryColor.Preset20 };
+
+    List<Contact> customers = new() {
+                new Contact
+            {
+                GivenName = "Luke",
+                Surname = "Skywalker",
+                CompanyName = "Jedi Order",
+                JobTitle = "Jedi Master",
+                EmailAddresses = new List<EmailAddress>() {
+                    new EmailAddress() { Name = "Luke Skywalker", Address = "luke@newrepublic.jedi" }
+                },
+                Categories = new List<string> {customerCategory.DisplayName}
+            },
+                new Contact
+            {
+                GivenName = "Gideon",
+                Surname = "Moff",
+                CompanyName = "Galactic Empire",
+                JobTitle = "Moff",
+                EmailAddresses = new List<EmailAddress>() {
+                    new EmailAddress(){ Name = "Moff Gideon", Address = "moffgideon@galacticempire.sith" },
+                    new EmailAddress(){ Name = "ISB Moff Gideon", Address = "g@isb.sith" },
+                },
+                Categories = new List<string> {customerCategory.DisplayName}
+
+            },
+                new Contact
+            {
+                GivenName = "Din",
+                Surname = "Djarin",
+                CompanyName = "The Watch",
+                JobTitle = "Bounty Hunter",
+                EmailAddresses = new List<EmailAddress>() { new EmailAddress() { Name = "Mando", Address = "din@thewatch.man" } },
+                Categories = new List<string> {customerCategory.DisplayName}
+            }
+        };
+
+    private string[] eventSubjects = { "Client Meeting", "Drafting Documents", "Preparing Client for Trial", "Mediation" };
+    
+    /// <summary>
+    /// Creates Sample Data in Outlook.
+    /// </summary>
+    /// <returns>Nohting.</returns>
+    private async Task CreateSampleData()
+    {
+        processingSampleData = true;
+
+        await CreateOutlookCategories();
+        await CreateOutlookContacts();
+        await CreateOutlookEvents();
+
+        stepCompleted[2] = true;
+        processingSampleData = false;
+    }
+
+    /// <summary>
+    /// Add Master Categories to Outlook.
+    /// </summary>
+    /// <returns>Nothing.</returns>
+    private async Task CreateOutlookCategories()
+    {
+        await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(customerCategory);
+        await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(billableCategory);
+        await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(postedCategory);
+    }
+    /// <summary>
+    /// Adds Contacts to Outlook. Your Customers.
+    /// </summary>
+    /// <returns>Nohting.</returns>
+    private async Task CreateOutlookContacts()
+    {
+        foreach (var customer in customers)
+        {
+            await GraphServiceClient.Me.Contacts.Request().AddAsync(customer);
+        }
+    }
+    /// <summary>
+    /// Adds generated events to the users calendar.
+    /// </summary>
+    /// <returns>Nothing</returns>
+    private async Task CreateOutlookEvents()
+    {
+        foreach (var ev in GetEvents())
+            await GraphServiceClient.Me.Calendar.Events.Request().AddAsync(ev);    
+    }
+    /// <summary>
+    /// Generates 50% non-billable research days an 50% billable events with customers.
+    /// </summary>
+    /// <returns>A list of events.</returns>
+    private List<Event> GetEvents()
+    {
+        List<Event> events = new();
+
+        // create list of possible event days of last month to today
+        List<DateTime> dates = new();
+        var today = DateTime.Today;
+        DateTime start = new DateTime(today.Year, today.Month - 1, 1);
+
+        for (DateTime dt = start; dt <= today; dt = dt.AddDays(1))
+            dates.Add(dt);
+
+        // 50% research days
+        Random rnd = new();
+        int halfOfDays = dates.Count / 2;
+
+        var researchDays = dates.OrderBy(x => rnd.Next()).Take(halfOfDays).ToList();
+        events.AddRange(CreateResearchEvents(researchDays));
+        dates.RemoveAll(d => researchDays.Contains(d));
+
+        // other half is billable
+        foreach (var date in dates)
+        {
+            events.Add(
+                CreateBillableEvent(
+                    date,
+                    customers.ElementAt(rnd.Next(0, customers.Count)),
+                    eventSubjects[rnd.Next(0, eventSubjects.Length)]
+                )
+            );
+        }
+
+        return events;
+    }
+    /// <summary>
+    /// Create static non-billable Research events
+    /// </summary>
+    /// <param name="dates"></param>
+    /// <returns>A list of events.</returns>
+    private List<Event> CreateResearchEvents(List<DateTime> dates)
+    {
+        List<Event> events = new();
+
+        foreach (var date in dates)
+        {
+            events.Add(
+                new Event
+                    {
+                        Subject = "Research",
+                        Start = new DateTimeTimeZone
+                        {
+                            DateTime = new DateTime(date.Year, date.Month, date.Day, 8, 0, 0).ToString("s"),
+                            TimeZone = "UTC"
+                        },
+                        End = new DateTimeTimeZone
+                        {
+                            DateTime = new DateTime(date.Year, date.Month, date.Day, 18, 0, 0).ToString("s"),
+                            TimeZone = "UTC"
+                        },
+
+                    });
+        }
+        return events;
+    }
+
+    /// <summary>
+    /// Create billable events for customer.
+    /// </summary>
+    /// <param name="date"></param>
+    /// <param name="customer"></param>
+    /// <param name="subject"></param>
+    /// <returns></returns>
+    private Event CreateBillableEvent(DateTime date, Contact customer, string subject)
+    {
+        return new Event
+            {
+                Subject = subject,
+                Categories = new List<string> { billableCategory.DisplayName },
+                Start = new DateTimeTimeZone
+                {
+                    DateTime = new DateTime(date.Year, date.Month, date.Day, 8, 0, 0).ToString("s"),
+                    TimeZone = "UTC"
+                },
+                End = new DateTimeTimeZone
+                {
+                    DateTime = new DateTime(date.Year, date.Month, date.Day, 18, 0, 0).ToString("s"),
+                    TimeZone = "UTC"
+                },
+                Attendees = new List<Attendee>()
+                {
+                    new Attendee
+                    {
+                        EmailAddress = customer.EmailAddresses.First(),
+                        Type = AttendeeType.Required
+                    }
+                }
+            };
+    }
+    /// <summary>
+    /// Deletes 10 Outlook Events.
+    /// </summary>
+    /// <returns>Nothing.</returns>
+    private async Task DeleteOutlookEvents()
+    {
+        // only 10 at a time?
+        var events = await GraphServiceClient.Me.Events.Request().GetAsync();
+
+        foreach(var ev in events)
+        {
+            await GraphServiceClient.Me.Calendar.Events[ev.Id].Request().DeleteAsync();
+        }
+    }
+}
+
