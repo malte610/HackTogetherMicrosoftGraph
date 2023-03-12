@@ -1,0 +1,68 @@
+﻿@page "/settings"
+
+@inject GraphServiceClient GraphServiceClient;
+
+<MudGrid Class="pa-4">
+    <MudItem xs=2>
+        <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="DeleteTestData">
+            @if (deleting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Processing</MudText>
+            }
+            else
+            {
+                @if (!doneDeleting)
+                {
+                    <MudText>Delete Sample Data and Files</MudText>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
+
+                    <MudText>Sample Data deleted!</MudText>
+                }
+            }
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    private bool deleting = false;
+    private bool doneDeleting = false;
+
+    private async Task DeleteTestData()
+    {
+        deleting = true;
+        var events = await GraphServiceClient.Me.Events.Request().Top(999).GetAsync();
+
+        foreach (var ev in events)
+        {
+            await GraphServiceClient.Me.Calendar.Events[ev.Id].Request().DeleteAsync();
+        }
+
+        var contacts = await GraphServiceClient.Me.Contacts.Request().Top(20).GetAsync();
+
+        foreach (var contact in contacts)
+        {
+            await GraphServiceClient.Me.Contacts[contact.Id].Request().DeleteAsync();
+        }
+
+        var categories = await GraphServiceClient.Me.Outlook.MasterCategories.Request().GetAsync();
+
+        foreach (var category in categories)
+        {
+            await GraphServiceClient.Me.Outlook.MasterCategories[category.Id].Request().DeleteAsync();
+        }
+
+        var appFolder = await GraphServiceClient.Me.Drive.Root.Children.Request().Filter("name eq 'CalendarToInvoice'").GetAsync();
+
+        if (appFolder.Count > 0)
+        {
+            await GraphServiceClient.Me.Drive.Items[appFolder.First().Id].Request().DeleteAsync();
+        }
+        doneDeleting = true;
+        deleting = false;
+    }
+}
