@@ -13,20 +13,20 @@
                     <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="CreateFoldersAndFiles" Disabled="stepCompleted[0]">
                         @if (processingFolders)
                         {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Processing</MudText>
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
                             @if (!stepCompleted[0])
                             {
-                                <MudText>Create Folders & Files</MudText>
+                                        <MudText>Create Folders & Files</MudText>
                             }
                             else
                             {
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
 
-                                <MudText>Folders & Files created!</MudText>
+                                        <MudText>Folders & Files created!</MudText>
                             }
                         }
                     </MudButton>
@@ -38,20 +38,20 @@
                     <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="CreateSampleData" Disabled="stepCompleted[2]">
                         @if (processingSampleData)
                         {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Processing</MudText>
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
                             @if (!stepCompleted[2])
                             {
-                                <MudText>Create Sample Data</MudText>
+                                        <MudText>Create Sample Data</MudText>
                             }
                             else
                             {
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
 
-                                <MudText>Sample Data created!</MudText>
+                                        <MudText>Sample Data created!</MudText>
                             }
                         }
                     </MudButton>
@@ -60,13 +60,13 @@
             </MudCarouselItem>
             <MudCarouselItem Transition="transition">
                 <div class="d-flex" style="height:100%">
-                    <MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.MudBlazor" Color="@Color.Primary" Size="@Size.Large" />
                     @if (stepCompleted.All(steps => steps == true))
                     {
-                        <MudButton Color="Color.Primary" OnClick="Submit">You did it! Click to close the Wizard and start creating invoices!</MudButton>
-                    } else
+                        <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="Submit">You did it! Click to close the Wizard and start creating invoices!</MudButton>
+                    }
+                    else
                     {
-                        <MudText>You haven't completed all steps yet. Please check the other steps. 👈</MudText>
+                        <MudText Class="mx-auto my-auto">You haven't completed all steps yet. Please check the other steps. 👈</MudText>
                     }
                 </div>
             </MudCarouselItem>
@@ -165,7 +165,7 @@
         };
 
     private string[] eventSubjects = { "Client Meeting", "Drafting Documents", "Preparing Client for Trial", "Mediation" };
-    
+
     /// <summary>
     /// Creates Sample Data in Outlook.
     /// </summary>
@@ -210,7 +210,7 @@
     private async Task CreateOutlookEvents()
     {
         foreach (var ev in GetEvents())
-            await GraphServiceClient.Me.Calendar.Events.Request().AddAsync(ev);    
+            await GraphServiceClient.Me.Calendar.Events.Request().AddAsync(ev);
     }
     /// <summary>
     /// Generates 50% non-billable research days an 50% billable events with customers.
@@ -323,7 +323,7 @@
         // only 10 at a time?
         var events = await GraphServiceClient.Me.Events.Request().GetAsync();
 
-        foreach(var ev in events)
+        foreach (var ev in events)
         {
             await GraphServiceClient.Me.Calendar.Events[ev.Id].Request().DeleteAsync();
         }
