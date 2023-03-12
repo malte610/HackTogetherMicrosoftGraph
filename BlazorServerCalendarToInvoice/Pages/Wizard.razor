@@ -1,3 +1,4 @@
+﻿@using System.Text.Json;
 ﻿@inject GraphServiceClient GraphServiceClient
 
 <MudDialog Style="background-color:white">
@@ -118,10 +119,46 @@
     private async Task CreateFiles(DriveItem folder)
     {
         DriveItem ledger = new() { Name = "Ledger.xlsx", File = new() };
+        DriveItem settings = new() { Name = "Settings.xlsx", File = new() };
 
+        // create files
         await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(ledger);
+        var settingsDriveItem = await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(settings);
+
+        await CreateSettingsXLSX(settingsDriveItem);
 
         stepCompleted[1] = true;
+    }
+
+    private async Task CreateSettingsXLSX(DriveItem file)
+    {
+
+        var worksheets = await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Worksheets.Request().GetAsync();
+        worksheets.First().Name = "Settings";
+        await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Worksheets[worksheets.First().Id].Request().UpdateAsync(worksheets.First());
+
+        var table = await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables.Add(true, "Settings!A1:D1").Request().PostAsync();
+        await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Columns.Add(0, null, "My Name").Request().PostAsync();
+        await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Columns.Add(1, null, "My Home Planet").Request().PostAsync();
+        await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Columns.Add(2, null, "Hourly Rate").Request().PostAsync();
+        await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Columns.Add(3, null, "VAT").Request().PostAsync();
+
+        //creates 8 cols by default ? 
+        //await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Columns["d"].Request().DeleteAsync();
+
+        List<List<string>> rowValues = new() {
+            new() {
+                    "Arsha Lome", "Samovar", "200", "9", "", "", "", ""
+            }
+        };
+
+        WorkbookTableRow newRow = new()
+        {
+            Values = JsonSerializer.SerializeToDocument(rowValues)
+        };
+
+        await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Rows.Request().AddAsync(newRow);
+
     }
 
     private static OutlookCategory customerCategory = new OutlookCategory { DisplayName = "Customer", Color = CategoryColor.Preset4 };
