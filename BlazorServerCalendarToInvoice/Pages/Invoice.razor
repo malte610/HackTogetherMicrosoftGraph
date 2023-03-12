@@ -10,7 +10,10 @@
             <MudSelect Value="@selectedCustomer" ValueChanged="(int value) => HandleCustomerChanged(value)" Label="Select Customer" Margin="Margin.Dense" Required AdornmentIcon="@Icons.Material.Filled.Person" AdornmentColor="Color.Primary">
                 @foreach (var customer in customers)
                 {
-                    <MudSelectItem Value="customers.IndexOf(customer)">@customer.DisplayName</MudSelectItem>
+                    <MudSelectItem Value="customers.IndexOf(customer)">
+                        <MudText>@customer.DisplayName</MudText>
+                        <MudText Typo="Typo.caption">@customer.CompanyName</MudText>
+                    </MudSelectItem>
                 }
             </MudSelect>
             <MudDatePicker Class="flex-grow-0" Date="@selectedMonthYear" PickerMonthChanged="(DateTime? value) => HandleMonthYearChanged(value)" Label="Select Month" OpenTo="OpenTo.Month" FixDay="1" Required DateFormat="MMMM yy" Margin="Margin.Dense" AdornmentColor="Color.Primary" />
