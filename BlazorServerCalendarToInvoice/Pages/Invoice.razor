@@ -20,6 +20,8 @@
         </MudStack>
     </MudContainer>
     <InvoiceComponent @bind-Invoice="invoice" ShowSaveButton="true"></InvoiceComponent>
+    @if(customerEvents.Count > 0)
+    {
     <MudTable Items="@customerEvents" Hover="true">
         <HeaderContent>
             <MudTh>Start</MudTh>
@@ -33,7 +35,12 @@
             <MudTd DataLabel="Subject">@context.Subject</MudTd>
             <MudTd DataLabel="Duration">@(DateTime.Parse(@context.End.DateTime) - DateTime.Parse(@context.Start.DateTime))</MudTd>
             </RowTemplate>
-        </MudTable>
+            </MudTable>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Normal">There are no billable events in your calendar for this customer/month 😲.<br>Try selecting another customer or month ⬆️</MudAlert>   
+    }
 </MudStack>
 
     @code {
