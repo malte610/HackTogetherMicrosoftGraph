@@ -20,30 +20,30 @@
         </MudStack>
     </MudContainer>
     <InvoiceComponent @bind-Invoice="invoice" ShowSaveButton="true"></InvoiceComponent>
-    @if(customerEvents.Count > 0)
+    @if (customerEvents.Count > 0)
     {
-    <MudTable Items="@customerEvents" Hover="true">
-        <HeaderContent>
-            <MudTh>Start</MudTh>
-            <MudTh>End</MudTh>
-            <MudTh>Subject</MudTh>
-            <MudTh>Duration</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Start">@DateTimeHelper.StrToReadableStr(@context.Start.DateTime)</MudTd>
-            <MudTd DataLabel="End">@DateTimeHelper.StrToReadableStr(@context.End.DateTime)</MudTd>
-            <MudTd DataLabel="Subject">@context.Subject</MudTd>
-            <MudTd DataLabel="Duration">@(DateTime.Parse(@context.End.DateTime) - DateTime.Parse(@context.Start.DateTime))</MudTd>
-            </RowTemplate>
+        <MudTable Items="@customerEvents" Hover="true" Class="mt-4">
+            <HeaderContent>
+                <MudTh>Start</MudTh>
+                <MudTh>End</MudTh>
+                <MudTh>Subject</MudTh>
+                <MudTh>Duration</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Start">@DateTimeHelper.StrToReadableStr(@context.Start.DateTime)</MudTd>
+                <MudTd DataLabel="End">@DateTimeHelper.StrToReadableStr(@context.End.DateTime)</MudTd>
+                <MudTd DataLabel="Subject">@context.Subject</MudTd>
+                <MudTd DataLabel="Duration">@(DateTime.Parse(@context.End.DateTime) - DateTime.Parse(@context.Start.DateTime))</MudTd>
+                </RowTemplate>
             </MudTable>
     }
     else
     {
-        <MudAlert Severity="Severity.Normal">There are no billable events in your calendar for this customer/month 😲.<br>Try selecting another customer or month ⬆️</MudAlert>   
+        <MudAlert Class="mt-8" Severity="Severity.Info">There are no billable events in your calendar for this customer/month 😲.<br>Try selecting another customer or month ⬆️</MudAlert>
     }
 </MudStack>
 
-    @code {
+@code {
     private UserContactsCollectionPage customers = new();
     private int selectedCustomer { get; set; }
     private DateTime? selectedMonthYear { get; set; } = DateTime.Now;
