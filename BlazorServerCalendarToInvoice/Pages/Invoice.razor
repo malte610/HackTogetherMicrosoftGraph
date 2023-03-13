@@ -4,8 +4,8 @@
 
 <PageTitle>Create Invoice</PageTitle>
 
-<MudGrid Spacing="2" Justify="Justify.FlexStart" Class="pa-4">
-    <MudItem xs="4">
+<MudStack Spacing="2" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-8">
+    <MudContainer Style="width:50%" MaxWidth="MaxWidth.Medium">
         <MudStack Row=true>
             <MudSelect Value="@selectedCustomer" ValueChanged="(int value) => HandleCustomerChanged(value)" Label="Select Customer" Margin="Margin.Dense" Required AdornmentIcon="@Icons.Material.Filled.Person" AdornmentColor="Color.Primary">
                 @foreach (var customer in customers)
@@ -18,7 +18,7 @@
             </MudSelect>
             <MudDatePicker Class="flex-grow-0" Date="@selectedMonthYear" PickerMonthChanged="(DateTime? value) => HandleMonthYearChanged(value)" Label="Select Month" OpenTo="OpenTo.Month" FixDay="1" Required DateFormat="MMMM yy" Margin="Margin.Dense" AdornmentColor="Color.Primary" />
         </MudStack>
-    </MudItem>
+    </MudContainer>
     <MudItem xs="8"></MudItem>
     <MudItem xs="6">
         <MudTable Items="@customerEvents" Hover="true">
@@ -35,8 +35,7 @@
                 <MudTd DataLabel="Duration">@(DateTime.Parse(@context.End.DateTime) - DateTime.Parse(@context.Start.DateTime))</MudTd>
             </RowTemplate>
         </MudTable>
-    </MudItem>
-</MudGrid>
+</MudStack>
 
 @code {
     private UserContactsCollectionPage customers = new();
