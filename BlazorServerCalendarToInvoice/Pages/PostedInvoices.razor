@@ -1,0 +1,42 @@
+﻿@page "/posted-invoices"
+@inject GraphServiceClient GraphServiceClient
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pt-8">
+    @if (postedInvoices.Count > 0)
+    {
+        <MudTable Items="@postedInvoices" Hover="true" Loading="loadingInvoices">
+            <HeaderContent>
+                <MudTh>Description</MudTh>
+                <MudTh>Created at</MudTh>
+                <MudTh>Link</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Description">@context.Name</MudTd>
+                <MudTd DataLabel="Created at">@context.CreatedDateTime.ToString()</MudTd>
+                <MudTd DataLabel="Link"><MudIconButton Href="@context.WebUrl" Target="_blank" Icon="@Icons.Material.Outlined.FileOpen"></MudIconButton></MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">You have no posted invoices yet!</MudAlert>
+    }
+
+</MudContainer>
+
+@code {
+    private bool loadingInvoices = false;
+    private List<DriveItem> postedInvoices = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        loadingInvoices = true;
+        var result = await GraphServiceClient.Me.Drive.Root
+            .ItemWithPath("CalendarToInvoice/Invoices")
+            .Children.Request().Top(999).GetAsync();
+
+        postedInvoices = result.ToList();
+
+        loadingInvoices = false;
+    }
+}
