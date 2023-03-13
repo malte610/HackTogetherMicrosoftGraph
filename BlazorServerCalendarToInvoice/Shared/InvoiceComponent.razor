@@ -1,7 +1,7 @@
 ﻿@using BlazorServerCalendarToInvoice.Rdlc;
 @inject GraphServiceClient GraphServiceClient
 
-<MudContainer MaxWidth="MaxWidth.Small">
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-4">
     <MudStack Row="true" Class="mb-4" Justify="Justify.SpaceEvenly">
         <div class="mud-theme-primary py-4 px-10 rounded-xl">
             <MudText Align="Align.Center"><strong>@Invoice.TotalQuantity().ToString("0.00")</strong><br /><small>Hours</small></MudText>
