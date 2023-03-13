@@ -6,7 +6,7 @@ using AspNetCore.Reporting;
 
 namespace BlazorServerCalendarToInvoice.Rdlc
 {
-    public class ReportService
+    public static class ReportService
     {
         public static byte[] CreateInvoice(InvoiceHeader invoice)
         {
