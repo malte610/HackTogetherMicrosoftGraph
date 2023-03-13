@@ -50,7 +50,7 @@
 
     private async Task UploadInvoice(byte[] file)
     {
-        var path = $"CalendarToInvoice/Invoices/{Invoice.RecipientName}_{Invoice.InvoiceDate.ToString("s")}_{Invoice.Guid.ToString()}.pdf";
+        var path = $"CalendarToInvoice/Invoices/{Invoice.RecipientName}_{Invoice.Guid.ToString()}.pdf";
         var uploadSession = await GraphServiceClient.Me.Drive.Root
             .ItemWithPath(path)
             .CreateUploadSession()
