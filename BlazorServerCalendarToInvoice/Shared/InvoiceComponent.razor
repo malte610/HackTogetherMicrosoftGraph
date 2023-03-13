@@ -28,12 +28,6 @@
                 }
             </MudButton>
         }
-        @if (ShowPrintButton)
-        {
-            <MudButton Href="@($"")" Target="_blank" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Custom.FileFormats.FilePdf">
-                <MudText>PDF</MudText>
-            </MudButton>
-        }
     </MudStack>
 </MudContainer>
 
@@ -41,7 +35,6 @@
     [Parameter] public InvoiceHeader Invoice { get; set; } = default!;
     [Parameter] public EventCallback<InvoiceHeader> InvoiceChanged { get; set; }
     [Parameter] public bool ShowSaveButton { get; set; }
-    [Parameter] public bool ShowPrintButton { get; set; }
     private bool savingInvoice = false;
 
     private async Task SaveInvoice()
