@@ -1,5 +1,7 @@
-﻿<MudContainer MaxWidth="MaxWidth.Small">
+﻿@using BlazorServerCalendarToInvoice.Rdlc;
+@inject GraphServiceClient GraphServiceClient
 
+<MudContainer MaxWidth="MaxWidth.Small">
     <MudStack Row="true" Class="mb-4" Justify="Justify.SpaceEvenly">
         <div class="mud-theme-primary py-4 px-10 rounded-xl">
             <MudText Align="Align.Center"><strong>@Invoice.TotalQuantity().ToString("0.00")</strong><br /><small>Hours</small></MudText>
@@ -45,8 +47,86 @@
     private async Task SaveInvoice()
     {
         savingInvoice = true;
+        var invPDF = ReportService.CreateInvoice(Invoice);
 
-        await Task.Delay(1000);
+        await UploadInvoice(invPDF);
+        await ChangeEventCategories();
+
         savingInvoice = false;
+    }
+
+    private async Task UploadInvoice(byte[] file)
+    {
+        var path = $"CalendarToInvoice/Invoices/{Invoice.RecipientName}_{Invoice.InvoiceDate.ToShortDateString()}.pdf";
+        var uploadSession = await GraphServiceClient.Me.Drive.Root
+            .ItemWithPath(path)
+            .CreateUploadSession()
+            .Request().PostAsync();
+
+        using var stream = new System.IO.MemoryStream(file);
+
+        // Max slice size must be a multiple of 320 KiB
+        int maxSliceSize = 320 * 1024;
+        var fileUploadTask = new LargeFileUploadTask<DriveItem>(uploadSession, stream, maxSliceSize, GraphServiceClient);
+
+        try
+        {
+            // Upload the file
+            var uploadResult = await fileUploadTask.UploadAsync();
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"Error uploading: {ex.ToString()}");
+        }
+    }
+
+    private async Task ChangeEventCategories()
+    {
+        var batchRequestContent = new BatchRequestContent();
+        List<string> requestIds = new();
+        List<Event> events = new();
+
+        // Get Events in Batch Request
+        foreach (var ev in Invoice.InvoiceLines)
+        {
+            requestIds.Add(
+                batchRequestContent.AddBatchRequestStep(
+                    GraphServiceClient.Me.Calendar.Events[ev.EventId].Request()));
+        }
+
+        var eventsResponse = await GraphServiceClient.Batch.Request().PostAsync(batchRequestContent);
+
+        try
+        {
+            foreach (var id in requestIds)
+            {
+                events.Add(
+                    await eventsResponse.GetResponseByIdAsync<Event>(id)
+                );
+            }
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"Get events failed: {ex.Error.Message}");
+        }
+
+        // Patch Event Category in Batch Request
+        var batchPatchRequestContent = new BatchRequestContent();
+        foreach (var ev in events)
+        {
+            var categories = ev.Categories.ToList();
+            categories.RemoveAll((cat) => cat == "Billable");
+            categories.Add("Posted");
+            ev.Categories = categories;
+
+            var httpRequest = GraphServiceClient.Me.Calendar.Events[ev.Id].Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Patch;
+            httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(ev), Encoding.UTF8, "application/json");
+
+            batchPatchRequestContent.AddBatchRequestStep(httpRequest);
+        }
+
+        await GraphServiceClient.Batch.Request().PostAsync(batchPatchRequestContent);
     }
 }
