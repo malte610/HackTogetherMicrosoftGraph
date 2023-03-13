@@ -1,0 +1,52 @@
+﻿<MudContainer MaxWidth="MaxWidth.Small">
+
+    <MudStack Row="true" Class="mb-4" Justify="Justify.SpaceEvenly">
+        <div class="mud-theme-primary py-4 px-10 rounded-xl">
+            <MudText Align="Align.Center"><strong>@Invoice.TotalQuantity().ToString("0.00")</strong><br /><small>Hours</small></MudText>
+        </div>
+        <div class="mud-theme-primary py-4 px-10 rounded-xl">
+            <MudText Align="Align.Center"><strong>@Invoice.TotalNet().ToString("0.00")</strong><br /><small>Net</small></MudText>
+        </div>        <div class="mud-theme-primary py-4 px-10 rounded-xl">
+            <MudText Align="Align.Center"><strong>@Invoice.TotalVAT().ToString("0.00")</strong><br /><small>VAT</small></MudText>
+        </div>        <div class="mud-theme-primary py-4 px-10 rounded-xl">
+            <MudText Align="Align.Center"><strong>@Invoice.TotalGross().ToString("0.00")</strong><br /><small>Gross</small></MudText>
+        </div>
+    </MudStack>
+    <MudStack Row="true" Class="mt-4" Justify="Justify.FlexEnd">
+        @if (ShowSaveButton)
+        {
+            <MudButton OnClick="SaveInvoice" Disabled="@savingInvoice" Class="" Variant="Variant.Filled" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Save">
+                @if (savingInvoice)
+                {
+                    <MudProgressCircular Color="Color.Tertiary" Indeterminate="true" Size="Size.Small" />
+                }
+                else
+                {
+                    <MudText>Save to PDF</MudText>
+                }
+            </MudButton>
+        }
+        @if (ShowPrintButton)
+        {
+            <MudButton Href="@($"")" Target="_blank" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Custom.FileFormats.FilePdf">
+                <MudText>PDF</MudText>
+            </MudButton>
+        }
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Parameter] public InvoiceHeader Invoice { get; set; } = default!;
+    [Parameter] public EventCallback<InvoiceHeader> InvoiceChanged { get; set; }
+    [Parameter] public bool ShowSaveButton { get; set; }
+    [Parameter] public bool ShowPrintButton { get; set; }
+    private bool savingInvoice = false;
+
+    private async Task SaveInvoice()
+    {
+        savingInvoice = true;
+
+        await Task.Delay(1000);
+        savingInvoice = false;
+    }
+}

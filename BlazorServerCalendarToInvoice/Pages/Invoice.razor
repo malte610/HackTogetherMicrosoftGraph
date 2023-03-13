@@ -1,0 +1,127 @@
+﻿@page "/invoice"
+
+@inject GraphServiceClient GraphServiceClient
+
+<PageTitle>Create Invoice</PageTitle>
+
+<MudStack Spacing="2" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-8">
+    <MudContainer Style="width:50%" MaxWidth="MaxWidth.Medium">
+        <MudStack Row=true>
+            <MudSelect Value="@selectedCustomer" ValueChanged="(int value) => HandleCustomerChanged(value)" Label="Select Customer" Margin="Margin.Dense" Required AdornmentIcon="@Icons.Material.Filled.Person" AdornmentColor="Color.Primary">
+                @foreach (var customer in customers)
+                {
+                    <MudSelectItem Value="customers.IndexOf(customer)">
+                        <MudText>@customer.DisplayName</MudText>
+                        <MudText Typo="Typo.caption">@customer.CompanyName</MudText>
+                    </MudSelectItem>
+                }
+            </MudSelect>
+            <MudDatePicker Class="flex-grow-0" Date="@selectedMonthYear" PickerMonthChanged="(DateTime? value) => HandleMonthYearChanged(value)" Label="Select Month" OpenTo="OpenTo.Month" FixDay="1" Required DateFormat="MMMM yy" Margin="Margin.Dense" AdornmentColor="Color.Primary" />
+        </MudStack>
+    </MudContainer>
+    <InvoiceComponent @bind-Invoice="invoice" ShowSaveButton="true"></InvoiceComponent>
+    <MudTable Items="@customerEvents" Hover="true">
+        <HeaderContent>
+            <MudTh>Start</MudTh>
+            <MudTh>End</MudTh>
+            <MudTh>Subject</MudTh>
+            <MudTh>Duration</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Start">@DateTimeHelper.StrToReadableStr(@context.Start.DateTime)</MudTd>
+            <MudTd DataLabel="End">@DateTimeHelper.StrToReadableStr(@context.End.DateTime)</MudTd>
+            <MudTd DataLabel="Subject">@context.Subject</MudTd>
+            <MudTd DataLabel="Duration">@(DateTime.Parse(@context.End.DateTime) - DateTime.Parse(@context.Start.DateTime))</MudTd>
+            </RowTemplate>
+        </MudTable>
+</MudStack>
+
+    @code {
+    private UserContactsCollectionPage customers = new();
+    private int selectedCustomer { get; set; }
+    private DateTime? selectedMonthYear { get; set; } = DateTime.Now;
+
+    private CalendarEventsCollectionPage allBillableEvents = new();
+    private List<Event> customerEvents = new();
+
+    private InvoiceHeader invoice = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        customers = (UserContactsCollectionPage)await GraphServiceClient.Me.Contacts
+            .Request().Filter("categories/any(i:i eq 'Customer')").GetAsync();
+
+        if (customers.Count > 0)
+        {
+            selectedCustomer = 0;
+        }
+        await GetAllBillableEvents();
+
+        StateHasChanged();
+    }
+
+    private async Task HandleCustomerChanged(int value)
+    {
+        selectedCustomer = value;
+        await FilterEventsForCustomer();
+    }
+
+    private async Task HandleMonthYearChanged(DateTime? value)
+    {
+        selectedMonthYear = value;
+        await GetAllBillableEvents();
+    }
+
+    private async Task GetAllBillableEvents()
+    {
+        var from = DateTimeHelper.GetStartOfMonth(selectedMonthYear!.Value).ToString("s");
+        var to = DateTimeHelper.GetEndOfMonth(selectedMonthYear!.Value).ToString("s");
+        var category = "Billable";
+
+        allBillableEvents = (CalendarEventsCollectionPage)await GraphServiceClient.Me.Calendar.Events.Request()
+            .Top(998)
+            .Select("subject, categories, attendees, start, end")
+            .Filter($"start/datetime ge '{from}' and start/datetime lt '{to}' and categories/any(p:p  eq '{category}')")
+            .OrderBy("start/datetime")
+            .GetAsync();
+
+        await FilterEventsForCustomer();
+    }
+
+    private async Task FilterEventsForCustomer()
+    {
+        // filter attendees in LINQ, couldn't make it work in Graph Filter
+        customerEvents = allBillableEvents.Where(
+             e => e.Attendees.Any(
+             a => a.EmailAddress.Address == customers.ElementAt(selectedCustomer).EmailAddresses.First().Address)
+        ).ToList();
+        await CreateInvoice();
+    }
+
+    private async Task CreateInvoice()
+    {
+
+        var settings = await GraphServiceClient.Me.Drive.Root.ItemWithPath("CalendarToInvoice/Data/Settings.xlsx").Workbook.Tables["Table1"].Rows.Request().GetAsync();
+
+        invoice = new();
+
+        invoice.InvoiceDate = DateTime.Now;
+
+        invoice.SenderName = settings.First().Values.RootElement[0][0].GetString() ?? "";
+        invoice.SenderPlanet = settings.First().Values.RootElement[0][1].GetString() ?? "";
+
+        invoice.RecipientName = customers.ElementAt(selectedCustomer).DisplayName;
+        invoice.RecipientPlanet = customers.ElementAt(selectedCustomer).BusinessAddress.CountryOrRegion;
+
+        var hourlyRate = settings.First().Values.RootElement[0][2].GetDecimal();
+        var vatRate = settings.First().Values.RootElement[0][3].GetDecimal();
+
+        foreach (var ev in customerEvents)
+        {
+            invoice.InvoiceLines.Add(
+                new InvoiceLine(invoice, ev, hourlyRate, vatRate)
+            );
+        }
+
+    }
+}

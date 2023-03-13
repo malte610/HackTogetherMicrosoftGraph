@@ -19,12 +19,14 @@
         <NavMenu></NavMenu>
     </MudDrawer>
     <MudMainContent>
-        @Body
+        <MudContainer MaxWidth="MaxWidth.Large">
+            @Body
+        </MudContainer>
     </MudMainContent>
 </MudLayout>
 
 @code {
-    bool drawerOpen = false;
+    bool drawerOpen = true;
 
     void DrawerToggle()
     {
