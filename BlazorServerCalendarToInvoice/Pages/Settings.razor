@@ -4,7 +4,7 @@
 
 <MudGrid Class="pa-4">
     <MudItem xs=2>
-        <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="DeleteTestData">
+        <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="DeleteTestData" Disabled="deleting">
             @if (deleting)
             {
                 <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -31,6 +31,8 @@
 @code {
     private bool deleting = false;
     private bool doneDeleting = false;
+    List<BatchRequestContent> batches = new();
+    BatchRequestContent currBatch = new();
 
     private async Task DeleteTestData()
     {
@@ -39,30 +41,84 @@
 
         foreach (var ev in events)
         {
-            await GraphServiceClient.Me.Calendar.Events[ev.Id].Request().DeleteAsync();
+            var httpRequest = GraphServiceClient.Me.Calendar.Events[ev.Id].Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Delete;
+            AddToBatches(httpRequest);
         }
 
         var contacts = await GraphServiceClient.Me.Contacts.Request().Top(20).GetAsync();
 
         foreach (var contact in contacts)
         {
-            await GraphServiceClient.Me.Contacts[contact.Id].Request().DeleteAsync();
+            var httpRequest = GraphServiceClient.Me.Contacts[contact.Id].Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Delete;
+            AddToBatches(httpRequest);
         }
 
-        var categories = await GraphServiceClient.Me.Outlook.MasterCategories.Request().GetAsync();
+        // ??? I have to repeat this 3 times to delete all categories ???
+        var categories = await GraphServiceClient.Me.Outlook.MasterCategories.Request().Top(20).GetAsync();
 
         foreach (var category in categories)
         {
-            await GraphServiceClient.Me.Outlook.MasterCategories[category.Id].Request().DeleteAsync();
+            var httpRequest = GraphServiceClient.Me.Outlook.MasterCategories[category.Id].Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Delete;
+            AddToBatches(httpRequest);
+        }
+        var categories2 = await GraphServiceClient.Me.Outlook.MasterCategories.Request().Top(20).GetAsync();
+
+        foreach (var category in categories2)
+        {
+            var httpRequest = GraphServiceClient.Me.Outlook.MasterCategories[category.Id].Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Delete;
+            AddToBatches(httpRequest);
+        }
+        var categories3 = await GraphServiceClient.Me.Outlook.MasterCategories.Request().Top(20).GetAsync();
+
+        foreach (var category in categories3)
+        {
+            var httpRequest = GraphServiceClient.Me.Outlook.MasterCategories[category.Id].Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Delete;
+            AddToBatches(httpRequest);
         }
 
         var appFolder = await GraphServiceClient.Me.Drive.Root.Children.Request().Filter("name eq 'CalendarToInvoice'").GetAsync();
 
         if (appFolder.Count > 0)
         {
-            await GraphServiceClient.Me.Drive.Items[appFolder.First().Id].Request().DeleteAsync();
+            var httpRequest = GraphServiceClient.Me.Drive.Items[appFolder.First().Id].Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Delete;
+            AddToBatches(httpRequest);
         }
-        doneDeleting = true;
+
+        batches.Add(currBatch);
+
+        try
+        {
+            foreach (var batch in batches)
+            {
+                await GraphServiceClient.Batch.Request().PostAsync(batch);
+            }
+            doneDeleting = true;
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"Deleting failed: {ex.Error.Message}.");   
+        }
+
         deleting = false;
+    }
+
+    private void AddToBatches(HttpRequestMessage httpRequest)
+    {
+        if (currBatch.BatchRequestSteps.Count < 20)
+        {
+            currBatch.AddBatchRequestStep(httpRequest);
+        }
+        else
+        {
+            batches.Add(currBatch);
+            currBatch = new();
+            currBatch.AddBatchRequestStep(httpRequest);
+        }
     }
 }
