@@ -66,7 +66,11 @@
     }
     else
     {
-        <MudAlert Class="mt-8" Severity="Severity.Info">There are no billable events in your calendar for this customer/month 😲.<br>Try selecting another customer or month ⬆️</MudAlert>
+        <MudAlert Class="mt-8" Severity="Severity.Info">
+            <MudText Typo="Typo.body1">
+                There are no billable events in your calendar for this customer/month 😲<br>Try selecting another customer or month ⬆️
+            </MudText>
+        </MudAlert>
     }
 </MudStack>
 
