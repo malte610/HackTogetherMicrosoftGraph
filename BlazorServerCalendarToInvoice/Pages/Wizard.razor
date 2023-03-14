@@ -328,8 +328,33 @@
     /// <returns>Nothing</returns>
     private async Task CreateOutlookEvents()
     {
+        List<BatchRequestContent> batches = new();
+        BatchRequestContent currBatch = new();
+
         foreach (var ev in GetEvents())
-            await GraphServiceClient.Me.Calendar.Events.Request().AddAsync(ev);
+        {
+            var httpRequest = GraphServiceClient.Me.Calendar.Events.Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Post;
+            httpRequest.Content = httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(ev), Encoding.UTF8, "application/json");
+
+            if (currBatch.BatchRequestSteps.Count < 20)
+            {
+                currBatch.AddBatchRequestStep(httpRequest);
+            }
+            else
+            {
+                batches.Add(currBatch);
+                currBatch = new();
+                currBatch.AddBatchRequestStep(httpRequest);
+            };
+        };
+        
+        batches.Add(currBatch);
+        foreach (var batch in batches)
+        {
+            await GraphServiceClient.Batch.Request().PostAsync(batch);
+        }
     }
     /// <summary>
     /// Generates 50% non-billable research days an 50% billable events with customers.
