@@ -2,9 +2,8 @@
 
 @inject GraphServiceClient GraphServiceClient;
 
-<MudGrid Class="pa-4">
-    <MudItem xs=2>
-
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pt-8">
+    <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceAround">
         <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="DeleteTestData" Disabled="deleting">
             @if (deleting)
             {
@@ -16,16 +15,15 @@
                 <MudText>Delete Sample Data and Files</MudText>
             }
         </MudButton>
-    </MudItem>
-    <MudItem xs="4">
+
         @if (doneDeleting)
         {
             <MudAlert Severity="Severity.Success">
                 <MudText Typo="Typo.body1">Folders, Files, Contacts, Categories and Events are now deleted!</MudText>
             </MudAlert>
         }
-    </MudItem>
-</MudGrid>
+    </MudStack>
+</MudContainer>
 
 
 @code {
