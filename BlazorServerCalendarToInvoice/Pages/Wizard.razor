@@ -254,13 +254,35 @@
     }
 
     /// <summary>
-    /// Add Master Categories to Outlook.
+    /// Add Master Categories to Outlook if they don't already exist.
     /// </summary>
     /// <returns>Nothing.</returns>
     private async Task CreateOutlookCategories()
     {
-        await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(billableCategory);
-        await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(postedCategory);
+        List<OutlookCategory> categories = new()
+        {
+            billableCategory,
+            postedCategory
+        };
+
+        foreach (var category in categories)
+        {
+            try
+            {
+                await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(category);
+            }
+            catch (ServiceException ex)
+            {
+                if (ex.Error.Code == "nameAlreadyExists")
+                {
+                    Console.WriteLine("The category already exists! Nothing to do here.");
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
     }
     /// <summary>
     /// Adds Contacts to Outlook. Your Customers.
