@@ -259,7 +259,6 @@
     /// <returns>Nothing.</returns>
     private async Task CreateOutlookCategories()
     {
-        await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(customerCategory);
         await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(billableCategory);
         await GraphServiceClient.Me.Outlook.MasterCategories.Request().AddAsync(postedCategory);
     }
