@@ -164,7 +164,7 @@
     private async Task SaveInvoice()
     {
         savingInvoice = true;
-        var invPDF = ReportService.CreateInvoice(invoice);
+        var invPDF = await ReportService.CreateInvoice(invoice);
 
         await UploadInvoice(invPDF);
         await ChangeEventCategories();

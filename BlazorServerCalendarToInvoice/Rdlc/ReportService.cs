@@ -8,8 +8,9 @@ namespace BlazorServerCalendarToInvoice.Rdlc
 {
     public static class ReportService
     {
-        public static byte[] CreateInvoice(InvoiceHeader invoice)
+        public static async Task<byte[]> CreateInvoice(InvoiceHeader invoice)
         {
+            await Task.Delay(1);
             // prepare data
 
             var tempList = new List<InvoiceHeader> { invoice };
@@ -34,7 +35,7 @@ namespace BlazorServerCalendarToInvoice.Rdlc
                 path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "Rdlc", "Reports", "Invoice.rdlc"));
             else
                 path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "wwwroot", "rdlc", "Invoice.rdlc"));
-
+            
             LocalReport localReport = new(path);
             localReport.AddDataSource("dsInvoiceHeader", dt_invoiceHeader);
             localReport.AddDataSource("dsInvoiceLines", dt_invoiceLines);
