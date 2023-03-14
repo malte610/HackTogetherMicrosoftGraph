@@ -10,12 +10,12 @@
             <HeaderContent>
                 <MudTh>Description</MudTh>
                 <MudTh>Created at</MudTh>
-                <MudTh>Link</MudTh>
+                <MudTh>View</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Description">@context.Name</MudTd>
                 <MudTd DataLabel="Created at">@context.CreatedDateTime.ToString()</MudTd>
-                <MudTd DataLabel="Link"><MudIconButton Href="@context.WebUrl" Target="_blank" Icon="@Icons.Material.Outlined.FileOpen"></MudIconButton></MudTd>
+                <MudTd DataLabel="View"><MudIconButton Href="@context.WebUrl" Target="_blank" Icon="@Icons.Material.Outlined.FileOpen"></MudIconButton></MudTd>
             </RowTemplate>
         </MudTable>
     }
