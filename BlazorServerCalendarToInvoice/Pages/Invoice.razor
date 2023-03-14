@@ -8,8 +8,11 @@
 
 <MudStack Spacing="2" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-8">
     <MudContainer Style="width:50%" MaxWidth="MaxWidth.Medium">
+        @if(allBillableEvents.Count == 0 && customerEvents.Count == 0) {
+            <MudProgressLinear Color="Color.Primary"  Indeterminate="true" Class="" />
+        }
         <MudStack Row=true>
-            <MudSelect Value="@selectedCustomer" ValueChanged="(int value) => HandleCustomerChanged(value)" Label="Select Customer" Margin="Margin.Dense" Required AdornmentIcon="@Icons.Material.Filled.Person" AdornmentColor="Color.Primary">
+            <MudSelect Value="@selectedCustomer" ValueChanged="(int value) => HandleCustomerChanged(value)" Disabled="@(customers.Count == 0)" Label="Select Customer" Margin="Margin.Dense" Required AdornmentIcon="@Icons.Material.Filled.Person" AdornmentColor="Color.Primary">
                 @foreach (var customer in customers)
                 {
                     <MudSelectItem Value="customers.IndexOf(customer)">
@@ -35,7 +38,7 @@
             </div>
         </MudStack>
         <MudStack Row="true" Class="mt-4" Justify="Justify.FlexEnd">
-            <MudButton OnClick="SaveInvoice" Disabled="@savingInvoice" Class="" Variant="Variant.Filled" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Save">
+            <MudButton OnClick="SaveInvoice" Disabled="@(savingInvoice || invoice.InvoiceLines.Count == 0)" Class="" Variant="Variant.Filled" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Save">
                 @if (savingInvoice)
                 {
                     <MudProgressCircular Color="Color.Tertiary" Indeterminate="true" Size="Size.Small" />
@@ -88,14 +91,21 @@
 
     protected override async Task OnInitializedAsync()
     {
-        customers = (UserContactsCollectionPage)await GraphServiceClient.Me.Contacts
-            .Request().Filter("categories/any(i:i eq 'Customer')").GetAsync();
-
-        if (customers.Count > 0)
+        try
         {
-            selectedCustomer = 0;
+            customers = (UserContactsCollectionPage)await GraphServiceClient.Me.Contacts
+                .Request().Filter("categories/any(i:i eq 'Customer')").GetAsync();
+
+            if (customers.Count > 0)
+            {
+                selectedCustomer = 0;
+            }
+            await GetAllBillableEvents();
         }
-        await GetAllBillableEvents();
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"{ex.Error}");
+        }
 
         StateHasChanged();
     }

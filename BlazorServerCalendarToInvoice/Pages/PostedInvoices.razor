@@ -38,11 +38,19 @@
     protected async override Task OnInitializedAsync()
     {
         loadingInvoices = true;
-        var result = await GraphServiceClient.Me.Drive.Root
-            .ItemWithPath("CalendarToInvoice/Invoices")
-            .Children.Request().Top(999).GetAsync();
+        try
+        {
+            var result = await GraphServiceClient.Me.Drive.Root
+                .ItemWithPath("CalendarToInvoice/Invoices")
+                .Children.Request().Top(999).GetAsync();
 
-        postedInvoices = result.ToList();
+            postedInvoices = result.ToList();
+
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"{ex.Error}");
+        }
 
         loadingInvoices = false;
     }

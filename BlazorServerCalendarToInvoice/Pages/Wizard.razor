@@ -4,7 +4,7 @@
 
 <MudDialog Style="background-color:white">
     <DialogContent>
-        <MudCarousel Class="mud-width-full" Style="height: 50vh;" TData="object" ShowArrows="true" ShowBullets="true" AutoCycle="false">
+        <MudCarousel Class="mud-width-full" Style="height: 60vh;" TData="object" ShowArrows="true" ShowBullets="true" AutoCycle="false">
             <MudCarouselItem Transition="transition" Class="d-flex">
                 <MudAlert Severity="Severity.Success" Class="mx-auto my-auto">
                     <MudStack Style="width: 100%;">
@@ -15,7 +15,7 @@
             </MudCarouselItem>
             <MudCarouselItem Transition="transition" Class="d-flex">
                 <MudStack Class="mx-auto my-auto" Style="width: 80%;">
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateFoldersAndFiles" Disabled="processingFolders">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateFoldersAndFiles" Disabled="@(processingFolders || stepCompleted[0])">
                         @if (processingFolders)
                         {
                             <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -23,18 +23,13 @@
                         }
                         else
                         {
-                            @if (!stepCompleted[0])
-                            {
-                                <MudText>Create Folders & Files</MudText>
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
-
-                                <MudText>Folders & Files created!</MudText>
-                            }
+                            <MudText>Create Folders & Files</MudText>
                         }
                     </MudButton>
+                    @if (stepCompleted[0])
+                    {
+                        <MudAlert Severity="Severity.Success"><MudText Typo="Typo.body1">Folders & Files created!</MudText></MudAlert>
+                    }
                     <MudAlert Severity="Severity.Info">
                         <MudText Typo="Typo.body1">
                             We are creating some Folders and Files to store your invoices.<br /><br />
@@ -46,7 +41,7 @@
             </MudCarouselItem>
             <MudCarouselItem Transition="transition" Class="d-flex">
                 <MudStack Class="mx-auto my-auto" Style="width: 80%;">
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateSampleData" Disabled="processingSampleData">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateSampleData" Disabled="@(processingSampleData || stepCompleted[1])">
                         @if (processingSampleData)
                         {
                             <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -54,18 +49,13 @@
                         }
                         else
                         {
-                            @if (!stepCompleted[2])
-                            {
-                                <MudText>Create Sample Data</MudText>
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
-
-                                <MudText>Sample Data created!</MudText>
-                            }
+                            <MudText>Create Sample Data</MudText>
                         }
                     </MudButton>
+                    @if (stepCompleted[1])
+                    {
+                        <MudAlert Severity="Severity.Success"><MudText Typo="Typo.body1">Sample Data created!</MudText></MudAlert>
+                    }
                     <MudAlert Severity="Severity.Info">
                         <MudText Typo="Typo.body1">
                             In this step we are creating data in your outlook account.<br /><br />
@@ -99,7 +89,7 @@
 
     private Transition transition = Transition.Slide;
 
-    private bool[] stepCompleted = { false, false, false };
+    private bool[] stepCompleted = { false, false };
 
     void Submit() => MudDialog.Close(DialogResult.Ok(true));
     void Cancel() => MudDialog.Cancel();
@@ -145,8 +135,6 @@
         var settingsDriveItem = await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(settings);
 
         await CreateSettingsXLSX(settingsDriveItem);
-
-        stepCompleted[1] = true;
     }
 
     private async Task CreateSettingsXLSX(DriveItem file)
@@ -249,7 +237,7 @@
         await CreateOutlookContacts();
         await CreateOutlookEvents();
 
-        stepCompleted[2] = true;
+        stepCompleted[1] = true;
         processingSampleData = false;
     }
 
