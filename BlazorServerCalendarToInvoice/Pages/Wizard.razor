@@ -4,71 +4,89 @@
 
 <MudDialog Style="background-color:white">
     <DialogContent>
-        <MudCarousel Class="mud-width-full" Style="height: 40vh;" TData="object" ShowArrows="true" ShowBullets="true" AutoCycle="false">
-            <MudCarouselItem Transition="transition">
-                <div class="d-flex" style="height:100%">
-                    <p class="mx-auto my-auto">This seems to be your first startup!<br />Let's set some files up for you in your OneDrive!</p>
-                </div>
+        <MudCarousel Class="mud-width-full" Style="height: 50vh;" TData="object" ShowArrows="true" ShowBullets="true" AutoCycle="false">
+            <MudCarouselItem Transition="transition" Class="d-flex">
+                <MudAlert Severity="Severity.Success" Class="mx-auto my-auto">
+                    <MudStack Style="width: 100%;">
+                        <MudText Typo="Typo.h3">Your first startup! 🥳</MudText><br />
+                        <MudText Typo="Typo.body1">Let's set some files up for you in your OneDrive! ➡️</MudText>
+                    </MudStack>
+                </MudAlert>
             </MudCarouselItem>
-            <MudCarouselItem Transition="transition">
-                <div class="d-flex" style="height:100%">
-                    <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="CreateFoldersAndFiles" Disabled="stepCompleted[0]">
+            <MudCarouselItem Transition="transition" Class="d-flex">
+                <MudStack Class="mx-auto my-auto" Style="width: 80%;">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateFoldersAndFiles" Disabled="processingFolders">
                         @if (processingFolders)
                         {
-                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                <MudText Class="ms-2">Processing</MudText>
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
                             @if (!stepCompleted[0])
                             {
-                                        <MudText>Create Folders & Files</MudText>
+                                <MudText>Create Folders & Files</MudText>
                             }
                             else
                             {
-                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
 
-                                        <MudText>Folders & Files created!</MudText>
+                                <MudText>Folders & Files created!</MudText>
                             }
                         }
                     </MudButton>
-
-                </div>
+                    <MudAlert Severity="Severity.Info">
+                        <MudText Typo="Typo.body1">
+                            We are creating some Folders and Files to store your invoices.<br /><br />
+                            If you want to see this wizard again delete the 'CalendarToInvoice' folder in your OneDrive.<br /><br />
+                            Or go to settings and use the button to ensure everything is deleted.
+                        </MudText>
+                    </MudAlert>
+                </MudStack>
             </MudCarouselItem>
-            <MudCarouselItem Transition="transition">
-                <div class="d-flex" style="height:100%">
-                    <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="CreateSampleData" Disabled="stepCompleted[2]">
+            <MudCarouselItem Transition="transition" Class="d-flex">
+                <MudStack Class="mx-auto my-auto" Style="width: 80%;">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateSampleData" Disabled="processingSampleData">
                         @if (processingSampleData)
                         {
-                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                <MudText Class="ms-2">Processing</MudText>
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
                         }
                         else
                         {
                             @if (!stepCompleted[2])
                             {
-                                        <MudText>Create Sample Data</MudText>
+                                <MudText>Create Sample Data</MudText>
                             }
                             else
                             {
-                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
 
-                                        <MudText>Sample Data created!</MudText>
+                                <MudText>Sample Data created!</MudText>
                             }
                         }
                     </MudButton>
-
-                </div>
+                    <MudAlert Severity="Severity.Info">
+                        <MudText Typo="Typo.body1">
+                            In this step we are creating data in your outlook account.<br /><br />
+                            Categories, Events, Contacts - all the good Stuff! <br /><br />
+                            The random generated Events in your calendar are the main focus here. If they have the billable category and a contact with the customer category attached to them you can post the event to an invoice!
+                        </MudText>
+                    </MudAlert>
+                </MudStack>
             </MudCarouselItem>
             <MudCarouselItem Transition="transition">
                 <div class="d-flex" style="height:100%">
                     @if (stepCompleted.All(steps => steps == true))
                     {
-                        <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="Submit">You did it! Click to close the Wizard and start creating invoices!</MudButton>
+                        <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="Submit">
+                            <MudText Typo="Typo.h3">You did it! 🎉</MudText>
+                            <MudText Typo="Typo.subtitle1">Click to close the Wizard and start creating invoices!</MudText>
+                        </MudButton>
                     }
                     else
                     {
-                        <MudText Class="mx-auto my-auto">You haven't completed all steps yet.<br/>Please check the other steps. 👈</MudText>
+                        <MudText Typo="Typo.body1" Class="mx-auto my-auto">You haven't completed all steps yet.<br />Please check the other steps again. 👈</MudText>
                     }
                 </div>
             </MudCarouselItem>
@@ -144,7 +162,7 @@
         await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Columns.Add(2, null, "Hourly Rate").Request().PostAsync();
         await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Columns.Add(3, null, "VAT").Request().PostAsync();
 
-        //creates 8 cols by default ? 
+        //creates 8 cols by default ?
         //await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Columns["d"].Request().DeleteAsync();
 
         List<List<string>> rowValues = new() {
@@ -154,9 +172,9 @@
         };
 
         WorkbookTableRow newRow = new()
-        {
-            Values = JsonSerializer.SerializeToDocument(rowValues)
-        };
+            {
+                Values = JsonSerializer.SerializeToDocument(rowValues)
+            };
 
         await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Rows.Request().AddAsync(newRow);
 
