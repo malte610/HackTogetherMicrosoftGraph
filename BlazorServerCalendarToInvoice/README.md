@@ -6,7 +6,7 @@
 This Blazor Server Hack generates Invoices from Outlook Calendar Events utilizing Microsoft Graph. 
 
 ## The Situation
-You are a lawyer in the Star Wars Universe. You are busy dealing with Mando's and Luke's speeding tickets, Luke's case with the Death Star...and Moff Gideons case regarding the nuking of Mandalore.
+You are a lawyer in the Star Wars Universe. You are busy dealing with Mando's and Luke's speeding tickets, Luke's case with the Death Star...and Moff Gideons case regarding the nuking of Mandalore. And on top of that you have to write them invoices, isn't there a way to utilize your calendar events to generate these invoices? Now there is!
 
 ## Setup
 
