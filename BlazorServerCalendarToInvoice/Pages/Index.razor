@@ -5,28 +5,85 @@
 
 <PageTitle>Home</PageTitle>
 
-
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-12">
+    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.h3">Hello there!</MudText>
+        <MudStack Row="true" Class="mt-8" Justify="Justify.Center" AlignItems="AlignItems.Center">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h3">@billableEvents</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent Class="" Style="py-0">
+                    <MudText>Billable Events</MudText>
+                </MudCardContent>
+            </MudCard>
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h3">@postedEvents</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText>Posted Events</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudStack>
+    </MudStack>
+</MudContainer>
 
 
 @code {
+    private int billableEvents;
+    private int postedEvents;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await GetData();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        try
+        if (firstRender)
         {
-            var mainFolder = await GraphServiceClient.Me.Drive.Root.Children["CalendarToInvoice"].Request().GetAsync();
-        }
-        catch (ServiceException ex)
-        {
-            if (ex.StatusCode == HttpStatusCode.NotFound)
+            try
             {
-                OpenWizardDialog();
+                var mainFolder = await GraphServiceClient.Me.Drive.Root.Children["CalendarToInvoice"].Request().GetAsync();
+            }
+            catch (ServiceException ex)
+            {
+                if (ex.StatusCode == HttpStatusCode.NotFound)
+                {
+                    await OpenWizardDialog();
+                }
             }
         }
     }
 
-    private void OpenWizardDialog()
+    private async Task OpenWizardDialog()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = false, DisableBackdropClick = true, FullWidth = true, NoHeader = true, MaxWidth=MaxWidth.Medium };
-        DialogService.Show<Wizard>("First Steps Wizard", options);
+        var options = new DialogOptions { CloseOnEscapeKey = false, DisableBackdropClick = true, FullWidth = true, NoHeader = true, MaxWidth = MaxWidth.Medium };
+        var dialog = await DialogService.ShowAsync<Wizard>("First Steps Wizard", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await GetData();
+            StateHasChanged();
+        };
+    }
+
+    private async Task GetData()
+    {
+        //var option = new List<Option>() { new QueryOption("$count", "true") }; // didn't get this working
+
+        var events = await GraphServiceClient.Me.Calendar.Events.Request()
+            .Top(999)
+            .Select("id, categories")
+            .GetAsync();
+
+        billableEvents = events.Where(c => c.Categories.Contains("Billable")).Count();
+        postedEvents = events.Where(c => c.Categories.Contains("Posted")).Count();
     }
 }
