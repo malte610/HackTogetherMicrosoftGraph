@@ -58,13 +58,15 @@
                 <MudTh>End</MudTh>
                 <MudTh>Subject</MudTh>
                 <MudTh>Duration</MudTh>
+                <MudTh>View</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Start">@DateTimeHelper.StrToReadableStr(@context.Start.DateTime)</MudTd>
                 <MudTd DataLabel="End">@DateTimeHelper.StrToReadableStr(@context.End.DateTime)</MudTd>
                 <MudTd DataLabel="Subject">@context.Subject</MudTd>
                 <MudTd DataLabel="Duration">@(DateTime.Parse(@context.End.DateTime) - DateTime.Parse(@context.Start.DateTime))</MudTd>
-                </RowTemplate>
+                <MudTd DataLabel="View"><MudIconButton Href="@context.WebLink" Target="_blank" Icon="@Icons.Material.Filled.Event"></MudIconButton></MudTd>
+            </RowTemplate>
             </MudTable>
     }
     else
@@ -130,7 +132,7 @@
 
         allBillableEvents = (CalendarEventsCollectionPage)await GraphServiceClient.Me.Calendar.Events.Request()
             .Top(998)
-            .Select("subject, categories, attendees, start, end")
+            .Select("subject, categories, attendees, start, end, webLink")
             .Filter($"start/datetime ge '{from}' and start/datetime lt '{to}' and categories/any(p:p  eq '{category}')")
             .OrderBy("start/datetime")
             .GetAsync();
