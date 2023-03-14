@@ -273,7 +273,7 @@
             }
             catch (ServiceException ex)
             {
-                if (ex.Error.Code == "nameAlreadyExists")
+                if (ex.Error.Code == "CategoryNameExists")
                 {
                     Console.WriteLine("The category already exists! Nothing to do here.");
                 }
