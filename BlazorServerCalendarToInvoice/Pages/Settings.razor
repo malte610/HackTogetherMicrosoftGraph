@@ -4,7 +4,8 @@
 
 <MudGrid Class="pa-4">
     <MudItem xs=2>
-        <MudButton Color="Color.Primary" Class="mx-auto my-auto" OnClick="DeleteTestData" Disabled="deleting">
+
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="DeleteTestData" Disabled="deleting">
             @if (deleting)
             {
                 <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -12,18 +13,17 @@
             }
             else
             {
-                @if (!doneDeleting)
-                {
-                    <MudText>Delete Sample Data and Files</MudText>
-                }
-                else
-                {
-                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"></MudIcon>
-
-                    <MudText>Sample Data deleted!</MudText>
-                }
+                <MudText>Delete Sample Data and Files</MudText>
             }
         </MudButton>
+    </MudItem>
+    <MudItem xs="4">
+        @if (doneDeleting)
+        {
+            <MudAlert Severity="Severity.Success">
+                <MudText Typo="Typo.body1">Folders, Files, Contacts, Categories and Events are now deleted!</MudText>
+            </MudAlert>
+        }
     </MudItem>
 </MudGrid>
 
@@ -85,7 +85,7 @@
         }
         catch (ServiceException ex)
         {
-            Console.WriteLine($"Deleting failed: {ex.Error.Message}.");   
+            Console.WriteLine($"Deleting failed: {ex.Error.Message}.");
         }
 
         deleting = false;
