@@ -1,6 +1,8 @@
 ﻿@page "/posted-invoices"
 @inject GraphServiceClient GraphServiceClient
 
+<PageTitle>Posted Invoices</PageTitle>
+
 <MudContainer MaxWidth="MaxWidth.Medium" Class="pt-8">
     @if (postedInvoices.Count > 0)
     {
