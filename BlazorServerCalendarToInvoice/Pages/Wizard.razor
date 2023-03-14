@@ -104,37 +104,76 @@
     private async Task CreateFoldersAndFiles()
     {
         processingFolders = true;
+
         string appName = "CalendarToInvoice";
-        DriveItem appDriveItem = new() { Name = appName, Folder = new() };
-        DriveItem dataDriveItem = new() { Name = "Data", Folder = new() };
-        DriveItem invoiceDriveItem = new() { Name = "Invoices", Folder = new() };
+        MyDriveItemFolder appFolder = new() { Name = appName, Folder = new() };
+        MyDriveItemFolder dataFolder = new() { Name = "Data", Folder = new() };
+        MyDriveItemFolder invoiceFolder = new() { Name = "Invoices", Folder = new() };
+        MyDriveItemFile settingsFile = new() { Name = "Settings.xlsx", File = new() };
 
-        var appFolder = await GraphServiceClient.Me.Drive.Root.Children.Request().AddAsync(appDriveItem);
-        var dataFolder = await GraphServiceClient.Me.Drive.Items[appFolder.Id].Children.Request().AddAsync(dataDriveItem);
-        var invoiceFolder = await GraphServiceClient.Me.Drive.Items[appFolder.Id].Children.Request().AddAsync(invoiceDriveItem);
+        BatchRequestContent batch = new();
+        HttpRequestMessage httpRequest;
+        BatchRequestStep dependendStep;
 
-        stepCompleted[0] = true;
-        await CreateFiles(dataFolder);
+        // add app folder
+        httpRequest = GraphServiceClient.Me.Drive.Root.Children.Request().GetHttpRequestMessage();
+        httpRequest.Method = HttpMethod.Post;
+        httpRequest.Content = httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(appFolder), Encoding.UTF8, "application/json");
+        var addAppFolderRequest = batch.AddBatchRequestStep(httpRequest);
 
-        await Task.Delay(100);
-        processingFolders = false;
-    }
+        // add data folder
+        httpRequest = GraphServiceClient.Me.Drive.Root.ItemWithPath(appName).Children.Request().GetHttpRequestMessage();
+        httpRequest.Method = HttpMethod.Post;
+        httpRequest.Content = httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(dataFolder), Encoding.UTF8, "application/json");
 
-    /// <summary>
-    /// Creates Files in a Folder.
-    /// </summary>
-    /// <param name="folder">The folder you want to have the files created in</param>
-    /// <returns>Nothing.</returns>
-    private async Task CreateFiles(DriveItem folder)
-    {
-        // DriveItem ledger = new() { Name = "Ledger.xlsx", File = new() };
-        DriveItem settings = new() { Name = "Settings.xlsx", File = new() };
+        var dataFolderRequestId = Guid.NewGuid().ToString();
+        dependendStep = new(dataFolderRequestId, httpRequest, new List<string> { addAppFolderRequest });
+        batch.AddBatchRequestStep(dependendStep);
 
-        // create files
-        // await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(ledger);
-        var settingsDriveItem = await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(settings);
+        // add invoice folder
+        httpRequest = GraphServiceClient.Me.Drive.Root.ItemWithPath(appName).Children.Request().GetHttpRequestMessage();
+        httpRequest.Method = HttpMethod.Post;
+        httpRequest.Content = httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(invoiceFolder), Encoding.UTF8, "application/json");
+
+        var invoiceFolderRequestId = Guid.NewGuid().ToString();
+        dependendStep = new(invoiceFolderRequestId, httpRequest, new List<string> { addAppFolderRequest });
+        batch.AddBatchRequestStep(dependendStep);
+
+        // add settings file
+        httpRequest = GraphServiceClient.Me.Drive.Root.ItemWithPath($"{appName}/data/").Children.Request().GetHttpRequestMessage();
+        httpRequest.Method = HttpMethod.Post;
+        httpRequest.Content = httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(settingsFile), Encoding.UTF8, "application/json");
+
+        var settingsFileRequestId = Guid.NewGuid().ToString();
+        dependendStep = new(settingsFileRequestId, httpRequest, new List<string> { dataFolderRequestId });
+        batch.AddBatchRequestStep(dependendStep);
+
+        // post batch
+        var batchResponse = await GraphServiceClient.Batch.Request().PostAsync(batch);
+
+        // De-serialize response based on known return type
+        DriveItem settingsDriveItem;
+        try
+        {
+            //var responses = await batchResponse.GetResponsesAsync();
+
+            settingsDriveItem = await batchResponse
+                .GetResponseByIdAsync<DriveItem>(settingsFileRequestId);
+
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"Add event failed: {ex.Error.Message}");
+            throw;
+        }
 
         await CreateSettingsXLSX(settingsDriveItem);
+        stepCompleted[0] = true;
+        processingFolders = false;
     }
 
     private async Task CreateSettingsXLSX(DriveItem file)
