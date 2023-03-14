@@ -357,7 +357,7 @@
         }
     }
     /// <summary>
-    /// Generates 50% non-billable research days an 50% billable events with customers.
+    /// Generates random 50% non-billable research days an 50% billable events with customers.
     /// </summary>
     /// <returns>A list of events.</returns>
     private List<Event> GetEvents()
@@ -419,7 +419,6 @@
                             DateTime = new DateTime(date.Year, date.Month, date.Day, 18, 0, 0).ToString("s"),
                             TimeZone = "UTC"
                         },
-
                     });
         }
         return events;
