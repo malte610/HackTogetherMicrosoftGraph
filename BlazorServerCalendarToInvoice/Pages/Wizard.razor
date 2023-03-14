@@ -106,7 +106,7 @@
 
     private bool processingFolders = false;
     private bool processingSampleData = false;
-
+    #region Request to create Folders and Files
     /// <summary>
     /// Creates Folders and Files in OneDrive
     /// </summary>
@@ -179,7 +179,9 @@
         await GraphServiceClient.Me.Drive.Items[file.Id].Workbook.Tables[table.Id].Rows.Request().AddAsync(newRow);
 
     }
+    #endregion
 
+    #region Request to create Outlook Data
     private static OutlookCategory customerCategory = new OutlookCategory { DisplayName = "Customer", Color = CategoryColor.None };
     private static OutlookCategory billableCategory = new OutlookCategory { DisplayName = "Billable", Color = CategoryColor.Preset3 };
     private static OutlookCategory postedCategory = new OutlookCategory { DisplayName = "Posted", Color = CategoryColor.Preset4 };
@@ -383,7 +385,7 @@
                 }
             };
     }
-    /// <summary>
+    #endregion
     /// Deletes 10 Outlook Events.
     /// </summary>
     /// <returns>Nothing.</returns>
