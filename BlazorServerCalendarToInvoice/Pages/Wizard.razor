@@ -137,11 +137,11 @@
     /// <returns>Nothing.</returns>
     private async Task CreateFiles(DriveItem folder)
     {
-        DriveItem ledger = new() { Name = "Ledger.xlsx", File = new() };
+        // DriveItem ledger = new() { Name = "Ledger.xlsx", File = new() };
         DriveItem settings = new() { Name = "Settings.xlsx", File = new() };
 
         // create files
-        await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(ledger);
+        // await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(ledger);
         var settingsDriveItem = await GraphServiceClient.Me.Drive.Items[folder.Id].Children.Request().AddAsync(settings);
 
         await CreateSettingsXLSX(settingsDriveItem);
