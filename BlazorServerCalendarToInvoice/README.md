@@ -28,7 +28,7 @@ Microsoft Graph
 
 ### Follow the Wizard 🧙‍  
 
-On first startup the app checks if there is a 'CalendarToInvoice' folder in your OneDrive's root. If it is not present the wizard opens and can you can follow it's steps. 
+On first startup the app checks if there is a 'CalendarToInvoice' folder in your OneDrive's root. If it is not, the wizard opens and can you can follow it's steps. 
 
 #### Wizard Step One - Folder and Files
 ```
@@ -48,7 +48,7 @@ root
 - 4 Contacts
 - Events in your Calendar from the first of last month to today. (50% non-billable Research events and 50% Random Customer Events)
 
-## How-To
+## HowTo
 
 ### Create Invoices
 
