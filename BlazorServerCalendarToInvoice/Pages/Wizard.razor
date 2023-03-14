@@ -386,18 +386,5 @@
             };
     }
     #endregion
-    /// Deletes 10 Outlook Events.
-    /// </summary>
-    /// <returns>Nothing.</returns>
-    private async Task DeleteOutlookEvents()
-    {
-        // only 10 at a time?
-        var events = await GraphServiceClient.Me.Events.Request().GetAsync();
-
-        foreach (var ev in events)
-        {
-            await GraphServiceClient.Me.Calendar.Events[ev.Id].Request().DeleteAsync();
-        }
-    }
 }
 
