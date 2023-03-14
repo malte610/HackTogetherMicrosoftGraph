@@ -19,7 +19,14 @@
     }
     else
     {
-        <MudAlert Severity="Severity.Info">You have no posted invoices yet!</MudAlert>
+        if (!loadingInvoices && postedInvoices.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
+                <MudText Typo="Typo.h6">
+                    You have no posted invoices yet 😲
+                </MudText>
+            </MudAlert>
+        }
     }
 
 </MudContainer>
