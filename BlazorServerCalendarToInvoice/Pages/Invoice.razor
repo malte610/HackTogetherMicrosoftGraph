@@ -1,5 +1,7 @@
 ﻿@page "/invoice"
 
+@inject IDialogService DialogService
+@inject IJSRuntime JSRuntime;
 @inject GraphServiceClient GraphServiceClient
 
 <PageTitle>Create Invoice</PageTitle>
@@ -19,7 +21,32 @@
             <MudDatePicker Class="flex-grow-0" Date="@selectedMonthYear" PickerMonthChanged="(DateTime? value) => HandleMonthYearChanged(value)" Label="Select Month" OpenTo="OpenTo.Month" FixDay="1" Required DateFormat="MMMM yy" Margin="Margin.Dense" AdornmentColor="Color.Primary" />
         </MudStack>
     </MudContainer>
-    <InvoiceComponent @bind-Invoice="invoice" ShowSaveButton="true"></InvoiceComponent>
+    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-4">
+        <MudStack Row="true" Class="mb-4" Justify="Justify.SpaceEvenly">
+            <div class="mud-theme-primary py-4 px-10 rounded-xl">
+                <MudText Align="Align.Center"><strong>@invoice.TotalQuantity().ToString("0.00")</strong><br /><small>Hours</small></MudText>
+            </div>
+            <div class="mud-theme-primary py-4 px-10 rounded-xl">
+                <MudText Align="Align.Center"><strong>@invoice.TotalNet().ToString("0.00")</strong><br /><small>Net</small></MudText>
+            </div>        <div class="mud-theme-primary py-4 px-10 rounded-xl">
+                <MudText Align="Align.Center"><strong>@invoice.TotalVAT().ToString("0.00")</strong><br /><small>VAT</small></MudText>
+            </div>        <div class="mud-theme-primary py-4 px-10 rounded-xl">
+                <MudText Align="Align.Center"><strong>@invoice.TotalGross().ToString("0.00")</strong><br /><small>Gross</small></MudText>
+            </div>
+        </MudStack>
+        <MudStack Row="true" Class="mt-4" Justify="Justify.FlexEnd">
+            <MudButton OnClick="SaveInvoice" Disabled="@savingInvoice" Class="" Variant="Variant.Filled" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Save">
+                @if (savingInvoice)
+                {
+                    <MudProgressCircular Color="Color.Tertiary" Indeterminate="true" Size="Size.Small" />
+                }
+                else
+                {
+                    <MudText>Save to PDF</MudText>
+                }
+            </MudButton>
+        </MudStack>
+    </MudContainer>
     @if (customerEvents.Count > 0)
     {
         <MudTable Items="@customerEvents" Hover="true" Class="mt-4">
@@ -51,7 +78,9 @@
     private CalendarEventsCollectionPage allBillableEvents = new();
     private List<Event> customerEvents = new();
 
+    private bool savingInvoice = false;
     private InvoiceHeader invoice = new();
+    private DriveItem lastUpload = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -131,4 +160,104 @@
         }
 
     }
+    #region Generate PDF, Upload and Change Categories on Event
+    private async Task SaveInvoice()
+    {
+        savingInvoice = true;
+        var invPDF = ReportService.CreateInvoice(invoice);
+
+        await UploadInvoice(invPDF);
+        await ChangeEventCategories();
+
+        invoice.InvoiceLines.Clear();
+        customerEvents.Clear();
+
+        var options = new DialogOptions { Position = DialogPosition.Center };
+        var dialog = await DialogService.ShowAsync<InvoicePostedDialog>("Your invoice was succesfully posted 🚀", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await JSRuntime.InvokeVoidAsync("eval", $"let _discard_ = open(`{lastUpload.WebUrl}`, `_blank`)");
+        }
+
+        savingInvoice = false;
+    }
+    private async Task UploadInvoice(byte[] file)
+    {
+        var path = $"CalendarToInvoice/Invoices/{invoice.RecipientName}_{invoice.Guid.ToString()}.pdf";
+        var uploadSession = await GraphServiceClient.Me.Drive.Root
+            .ItemWithPath(path)
+            .CreateUploadSession()
+            .Request().PostAsync();
+
+        using var stream = new System.IO.MemoryStream(file);
+
+        // Max slice size must be a multiple of 320 KiB
+        int maxSliceSize = 320 * 1024;
+        var fileUploadTask = new LargeFileUploadTask<DriveItem>(uploadSession, stream, maxSliceSize, GraphServiceClient);
+
+        try
+        {
+            // Upload the file
+            var uploadResult = await fileUploadTask.UploadAsync();
+
+            lastUpload = uploadResult.ItemResponse;
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"Error uploading: {ex.ToString()}");
+        }
+    }
+
+    private async Task ChangeEventCategories()
+    {
+        var batchRequestContent = new BatchRequestContent();
+        List<string> requestIds = new();
+        List<Event> events = new();
+
+        // Get Events in Batch Request
+        foreach (var ev in invoice.InvoiceLines)
+        {
+            requestIds.Add(
+                batchRequestContent.AddBatchRequestStep(
+                    GraphServiceClient.Me.Calendar.Events[ev.EventId].Request()));
+        }
+
+        var eventsResponse = await GraphServiceClient.Batch.Request().PostAsync(batchRequestContent);
+
+        try
+        {
+            foreach (var id in requestIds)
+            {
+                events.Add(
+                    await eventsResponse.GetResponseByIdAsync<Event>(id)
+                );
+            }
+        }
+        catch (ServiceException ex)
+        {
+            Console.WriteLine($"Get events failed: {ex.Error.Message}");
+        }
+
+        // Patch Event Category in Batch Request
+        var batchPatchRequestContent = new BatchRequestContent();
+        foreach (var ev in events)
+        {
+            var categories = ev.Categories.ToList();
+            categories.RemoveAll((cat) => cat == "Billable");
+            categories.Add("Posted");
+            ev.Categories = categories;
+
+            var httpRequest = GraphServiceClient.Me.Calendar.Events[ev.Id].Request().GetHttpRequestMessage();
+            httpRequest.Method = HttpMethod.Patch;
+            httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(ev), Encoding.UTF8, "application/json");
+
+            batchPatchRequestContent.AddBatchRequestStep(httpRequest);
+        }
+
+        await GraphServiceClient.Batch.Request().PostAsync(batchPatchRequestContent);
+    }
+    #endregion
 }
